@@ -315,6 +315,13 @@
       } else if (f.type === "select") {
         const opts = (f.optionsFn ? f.optionsFn() : f.options) || [];
         input = `<select ${base}>${opts.map(o => `<option value="${o.value}" ${String(v) === String(o.value) ? 'selected' : ''}>${o.label}</option>`).join("")}</select>`;
+      } else if (f.key === "image") {
+        input = `<input type="text" ${base} value="${escapeHtml(v)}" id="img-url-field" placeholder="بەستەری وێنە لێرە بنووسە یان وێنە هەڵبژێرە">
+          <label style="display:inline-block;margin-top:8px;padding:10px 18px;background:#1a237e;color:#fff;border-radius:8px;cursor:pointer;font-size:14px;text-align:center">
+            📷 هەڵبژاردنی وێنە لە مۆبایل
+            <input type="file" accept="image/*" id="img-upload-field" style="display:none">
+          </label>
+          <div id="img-preview" style="margin-top:8px"></div>`;
       } else {
         input = `<input type="${f.type}" ${base} value="${escapeHtml(v)}">`;
       }
@@ -352,6 +359,36 @@
 
     window.SAApp.openGenericModal((opts.mode === "edit" ? "دەستکاری " : "زیادکردنی ") + s.label, html);
     const form = document.getElementById("crud-form");
+    // Wire up image upload if present
+    const imgUpload = document.getElementById("img-upload-field");
+    const imgUrl = document.getElementById("img-url-field");
+    if (imgUpload && imgUrl) {
+      imgUpload.addEventListener("change", (ev) => {
+        const file = ev.target.files[0];
+        if (!file) return;
+        // Compress and convert to base64
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const MAX = 800;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+              else { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+            imgUrl.value = dataUrl;
+            document.getElementById("img-preview").innerHTML = `<img src="${dataUrl}" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:4px">`;
+          };
+          img.src = re.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
     document.getElementById("crud-cancel").addEventListener("click", () => document.getElementById("gen-modal").classList.remove("show"));
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -422,7 +459,7 @@
 
     // Generic array path
     const item = formToItem(schemaKey, fd);
-     // For new items, auto-generate an ID if the schema uses idField
+    // For new items, auto-generate an ID if the schema uses idField
     if (opts.mode !== "edit" && s.idField && !item[s.idField]) {
       const newDef = s.newItem();
       item[s.idField] = newDef[s.idField] || (s.idField + Date.now());
