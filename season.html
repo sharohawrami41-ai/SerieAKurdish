@@ -2,54 +2,54 @@
 <html lang="ckb" dir="rtl">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>سێریا ئەی — وەرزەکان</title>
-    <link rel="icon" href="assets/img/seriaa.jpeg">
-    <link rel="stylesheet" href="assets/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>سێریا ئەی — وەرزەکان</title>
+  <link rel="icon" href="assets/img/seriaa.jpeg">
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 
 <body>
-    <main class="container">
-        <section class="hero">
-            <h1>وەرزی ئێستا و 5 وەرزی ڕابردوو</h1>
-            <p>دوگمەیەک هەڵبژێرە بۆ بینینی زانیاری ئەو وەرزە</p>
-        </section>
+  <main class="container">
+    <section class="hero">
+      <h1>وەرزی ئێستا و 5 وەرزی ڕابردوو</h1>
+      <p>دوگمەیەک هەڵبژێرە بۆ بینینی زانیاری ئەو وەرزە</p>
+    </section>
 
-        <div class="season-switch" id="season-switch"></div>
-        <div id="season-content"></div>
+    <div class="season-switch" id="season-switch"></div>
+    <div id="season-content"></div>
 
-        <div class="section-title" id="top-scorers" style="margin-top:40px">
-            <h2>ریزبەندی گۆڵکاران (وەرزی ئێستا)</h2>
-        </div>
-        <div id="scorers-list"></div>
+    <div class="section-title" id="top-scorers" style="margin-top:40px">
+      <h2>ریزبەندی گۆڵکاران (وەرزی ئێستا)</h2>
+    </div>
+    <div id="scorers-list"></div>
 
-        <div class="section-title" style="margin-top:30px">
-            <h2>ڕیزبەندی ئەسیستکاران</h2>
-        </div>
-        <div id="assists-list"></div>
+    <div class="section-title" style="margin-top:30px">
+      <h2>ڕیزبەندی ئەسیستکاران</h2>
+    </div>
+    <div id="assists-list"></div>
 
-        <div class="section-title" style="margin-top:30px">
-            <h2>ڕیزبەندی تەواو</h2>
-        </div>
-        <div id="full-table"></div>
-    </main>
-    <script src="assets/firebase-config.js"></script>
-    <script src="assets/data.js"></script>
-    <script src="assets/script.js"></script>
-    <script src="assets/admin.js"></script>
-    <script>
-        SAApp.init("season").then(() => {
-            const admin = window.SA_isAdmin;
-            const seasons = window.SA.seasons;
-            const ids = Object.keys(seasons);
-            const sw = document.getElementById("season-switch");
-            sw.innerHTML = ids.map(id => `<button data-sid="${id}" class="${id === window.SA.meta.currentSeasonId ? 'active' : ''}">${id} ${seasons[id].status === 'current' ? '(ئێستا)' : ''}</button>`).join("")
-                + (admin ? `<span style="margin-inline-start:8px">${SAAdmin.addButton("season")}</span>` : "");
-            function showSeason(id) {
-                const s = seasons[id];
-                const adminRow = admin ? `<div style="margin-top:12px">${SAAdmin.itemButtons("season", { seasonId: id })}</div>` : "";
-                document.getElementById("season-content").innerHTML = `
+    <div class="section-title" style="margin-top:30px">
+      <h2>ڕیزبەندی تەواو</h2>
+    </div>
+    <div id="full-table"></div>
+  </main>
+  <script src="assets/firebase-config.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/script.js"></script>
+  <script src="assets/admin.js"></script>
+  <script>
+    SAApp.init("season").then(() => {
+    const admin = window.SA_isAdmin;
+    const seasons = window.SA.seasons;
+    const ids = Object.keys(seasons);
+    const sw = document.getElementById("season-switch");
+    sw.innerHTML = ids.map(id => `<button data-sid="${id}" class="${id === window.SA.meta.currentSeasonId ? 'active' : ''}">${id} ${seasons[id].status === 'current' ? '(ئێستا)' : ''}</button>`).join("")
+      + (admin ? `<span style="margin-inline-start:8px">${SAAdmin.addButton("season")}</span>` : "");
+    function showSeason(id) {
+      const s = seasons[id];
+      const adminRow = admin ? `<div style="margin-top:12px">${SAAdmin.itemButtons("season", { seasonId: id })}</div>` : "";
+      document.getElementById("season-content").innerHTML = `
     <div class="grid cols-4">
       <div class="record"><div class="label">پاڵەوان</div><div class="value" style="font-size:24px">${s.champion}</div></div>
       <div class="record"><div class="label">ڕیزبەندی گۆڵکاران</div><div class="value" style="font-size:28px">${s.topScorer.goals}</div><div class="name">${s.topScorer.name}</div></div>
@@ -59,13 +59,13 @@
     <p style="background:var(--ink-soft);padding:14px;border-radius:10px;margin-top:16px"><strong>تێبینی وەرز:</strong> ${s.notable}</p>
     ${adminRow}
   `;
-                document.querySelectorAll("#season-switch button").forEach(b => b.classList.toggle("active", b.dataset.sid === id));
-            }
-            sw.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) showSeason(b.dataset.sid); });
-            showSeason(window.SA.meta.currentSeasonId);
+      document.querySelectorAll("#season-switch button").forEach(b => b.classList.toggle("active", b.dataset.sid === id));
+    }
+    sw.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) showSeason(b.dataset.sid); });
+    showSeason(window.SA.meta.currentSeasonId);
 
-            // Scorers & assists & table
-            document.getElementById("scorers-list").innerHTML = (window.SA.topScorers || []).map((s, i) => `
+    // Scorers & assists & table
+    document.getElementById("scorers-list").innerHTML = (window.SA.topScorers || []).map((s, i) => `
   <div class="scorer">
     <div class="rank ${i < 3 ? ['one', 'two', 'three'][i] : ''}">${i + 1}</div>
     <div class="info"><div style="font-weight:800">${s.name}</div><div style="color:var(--muted);font-size:13px">${SAApp.teamName(s.team)}</div></div>
@@ -73,7 +73,7 @@
     ${admin ? SAAdmin.itemButtons("scorer", { index: i }) : ""}
   </div>`).join("") + (admin ? `<div style="margin-top:10px">${SAAdmin.addButton("scorer")}</div>` : "");
 
-            document.getElementById("assists-list").innerHTML = (window.SA.topAssists || []).map((s, i) => `
+    document.getElementById("assists-list").innerHTML = (window.SA.topAssists || []).map((s, i) => `
   <div class="scorer">
     <div class="rank ${i < 3 ? ['one', 'two', 'three'][i] : ''}">${i + 1}</div>
     <div class="info"><div style="font-weight:800">${s.name}</div><div style="color:var(--muted);font-size:13px">${SAApp.teamName(s.team)}</div></div>
@@ -81,9 +81,9 @@
     ${admin ? SAAdmin.itemButtons("assist", { index: i }) : ""}
   </div>`).join("") + (admin ? `<div style="margin-top:10px">${SAAdmin.addButton("assist")}</div>` : "");
 
-            document.getElementById("full-table").innerHTML = SAApp.tableHTML();
-        });
-    </script>
+    document.getElementById("full-table").innerHTML = SAApp.tableHTML();
+    });
+  </script>
 </body>
 
 </html>

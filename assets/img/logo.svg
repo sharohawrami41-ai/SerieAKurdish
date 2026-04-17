@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Seria Ay logo">
+  <rect width="400" height="400" fill="#000"/>
+  <!-- Top white triangle -->
+  <polygon points="200,70 160,150 240,150" fill="#ffffff"/>
+  <!-- Stylized A formed by three colored bars (Italian flag green/white/red) -->
+  <g transform="translate(0,10)">
+    <!-- left green bar -->
+    <polygon points="70,290 130,230 160,260 100,320" fill="#009246"/>
+    <!-- middle white top bar -->
+    <polygon points="130,230 270,230 300,260 100,260" fill="#ffffff"/>
+    <!-- right red bar -->
+    <polygon points="270,230 330,290 300,320 240,260" fill="#ce2b37"/>
+  </g>
+  <!-- Kurdish text: سێریا ئەی -->
+  <text x="200" y="370" text-anchor="middle" fill="#ffffff"
+        font-family="Aria-ExtraBold, 'Noto Naskh Arabic', Tahoma, sans-serif"
+        font-size="46" font-weight="800" direction="rtl">سێریا ئەی</text>
+</svg>

@@ -224,18 +224,19 @@
     localStorage.setItem("sa_data_overlay", JSON.stringify(ov));
     // Also save to Firebase cloud so ALL devices see the change
     if (window.SA_FIREBASE_URL) {
-      fetch(window.SA_FIREBASE_URL + '/overlay.json', {
+      return fetch(window.SA_FIREBASE_URL + '/overlay.json', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ov)
       }).catch(e => console.warn("Firebase save failed", e));
     }
+    return Promise.resolve();
   }
   // Persist a top-level key of SA into the overlay
   function persistTopKey(key) {
     const ov = loadOverlay();
     ov[key] = window.SA[key];
-    saveOverlay(ov);
+    return saveOverlay(ov);
   }
 
   // ---------- Apply form values to a schema item ----------
@@ -356,9 +357,10 @@
       e.preventDefault();
       const fd = new FormData(form);
       try {
-        handleSave(schemaKey, fd, opts);
+        const result = handleSave(schemaKey, fd, opts);
         document.getElementById("gen-modal").classList.remove("show");
-        location.reload();
+        // Wait for Firebase to finish saving before reloading
+        Promise.resolve(result).then(() => location.reload());
       } catch (err) {
         document.getElementById("crud-msg").textContent = err.message;
       }
@@ -385,8 +387,7 @@
         weeks.sort((a,b) => a.week - b.week);
       }
       window.SA.fixtures = weeks;
-      persistTopKey("fixtures");
-      return;
+      return persistTopKey("fixtures");
     }
 
     // Fixture match: nested edit
@@ -404,8 +405,7 @@
       }
       week.matches.push(match);
       window.SA.fixtures = weeks;
-      persistTopKey("fixtures");
-      return;
+      return persistTopKey("fixtures");
     }
 
     // Season: object keyed by id
@@ -417,8 +417,7 @@
       if (!window.SA.seasons) window.SA.seasons = {};
       if (opts.mode === "edit" && opts.seasonId && opts.seasonId !== id) delete window.SA.seasons[opts.seasonId];
       window.SA.seasons[id] = season;
-      persistTopKey("seasons");
-      return;
+      return persistTopKey("seasons");
     }
 
     // Generic array path
@@ -442,7 +441,7 @@
     } else {
       arr.push(item);
     }
-    persistTopKey(topKey);
+    return persistTopKey(topKey);
   }
 
   // ---------- Delete ----------
@@ -454,7 +453,12 @@
         <button class="btn ghost" id="del-no">نەخێر</button>
       </div>`);
     document.getElementById("del-no").addEventListener("click", () => document.getElementById("gen-modal").classList.remove("show"));
-    document.getElementById("del-yes").addEventListener("click", () => { onYes(); document.getElementById("gen-modal").classList.remove("show"); location.reload(); });
+    document.getElementById("del-yes").addEventListener("click", () => {
+      const result = onYes();
+      document.getElementById("gen-modal").classList.remove("show");
+      // Wait for Firebase to finish saving before reloading
+      Promise.resolve(result).then(() => location.reload());
+    });
   }
 
   function deleteItem(schemaKey, opts) {
@@ -465,7 +469,7 @@
         const weeks = window.SA.fixtures || [];
         const idx = weeks.findIndex(w => w.week === opts.week);
         if (idx >= 0) weeks.splice(idx, 1);
-        persistTopKey("fixtures");
+        return persistTopKey("fixtures");
       });
       return;
     }
@@ -477,7 +481,7 @@
           const idx = w.matches.findIndex(m => m.id === opts.id);
           if (idx >= 0) { w.matches.splice(idx, 1); break; }
         }
-        persistTopKey("fixtures");
+        return persistTopKey("fixtures");
       });
       return;
     }
@@ -485,7 +489,7 @@
     if (schemaKey === "season") {
       confirmDelete("دڵنیایت لە سڕینەوەی ئەم وەرزە؟", () => {
         delete window.SA.seasons[opts.seasonId];
-        persistTopKey("seasons");
+        return persistTopKey("seasons");
       });
       return;
     }
@@ -500,7 +504,7 @@
       } else if (opts.index != null) {
         arr.splice(opts.index, 1);
       }
-      persistTopKey(path[0]);
+      return persistTopKey(path[0]);
     });
   }
 
