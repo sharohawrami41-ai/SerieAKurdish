@@ -114,6 +114,7 @@ function renderFooter() {
       <small>© 2026 سێریا ئەی کوردی — هەموو مافەکانی پارێزراون</small>
     </footer>
     <button class="admin-fab" id="admin-fab" title="پاڵپشت">🔐</button>
+    ${isLoggedIn() ? '<button id="sync-fab" title="هاوکاتکردن بۆ کلاود" style="position:fixed;bottom:20px;left:80px;z-index:999;width:48px;height:48px;border-radius:50%;background:#1a8917;color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)">☁</button>' : ''}
     <div class="modal-back" id="admin-modal">
       <div class="modal">
         <div class="modal-head">
@@ -125,6 +126,41 @@ function renderFooter() {
     </div>
   `);
   $("#admin-fab").addEventListener("click", openAdmin);
+  const syncFab = $("#sync-fab");
+  if (syncFab) {
+    syncFab.addEventListener("click", () => {
+      if (!window.SA_FIREBASE_URL) { alert("Firebase not configured!"); return; }
+      syncFab.textContent = "⏳";
+      syncFab.style.background = "#666";
+      const ov = JSON.parse(localStorage.getItem("sa_data_overlay") || "{}");
+      ["news","fixtures","table","topScorers","topAssists","records","seasons","national","contact","teams"].forEach(key => {
+        if (window.SA[key] !== undefined) ov[key] = window.SA[key];
+      });
+      if (ov.news && Array.isArray(ov.news)) {
+        ov.news.forEach((n, i) => { if (!n.id) n.id = "n" + Date.now() + i; });
+      }
+      localStorage.setItem("sa_data_overlay", JSON.stringify(ov));
+      fetch(window.SA_FIREBASE_URL + '/overlay.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ov)
+      }).then(r => {
+        if (r.ok) {
+          syncFab.textContent = "✅";
+          syncFab.style.background = "#1a8917";
+          setTimeout(() => { syncFab.textContent = "☁"; }, 2000);
+        } else {
+          syncFab.textContent = "❌";
+          syncFab.style.background = "#c0392b";
+          alert("Sync failed: " + r.status);
+        }
+      }).catch(e => {
+        syncFab.textContent = "❌";
+        syncFab.style.background = "#c0392b";
+        alert("Sync failed: " + e.message);
+      });
+    });
+  }
   $("#admin-close").addEventListener("click", closeAdmin);
   $("#admin-modal").addEventListener("click", (e) => { if (e.target.id === "admin-modal") closeAdmin(); });
 }
@@ -203,10 +239,41 @@ function renderAdminPanel() {
           <li>زانیاری پەیوەندی → پەڕەی <strong>پەیوەندی</strong></li>
         </ul>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="sync-cloud" style="background:#1a8917">☁ هاوکاتکردن بۆ کلاود</button>
           <button class="btn ghost" id="reset-ov">ڕێکخستنەوە بۆ بنەڕەت</button>
           <button class="btn ghost" id="export-ov">ناردنی داتا وەک JSON</button>
         </div>
+        <div id="sync-msg" style="margin-top:8px;font-size:13px"></div>
       `;
+      $("#sync-cloud").addEventListener("click", () => {
+        if (!window.SA_FIREBASE_URL) { alert("Firebase URL not configured!"); return; }
+        const syncMsg = $("#sync-msg");
+        syncMsg.innerHTML = '<span style="color:#1a8917">⏳ هاوکاتکردن...</span>';
+        // First ensure all current SA data is in the overlay
+        const ov = JSON.parse(localStorage.getItem("sa_data_overlay") || "{}");
+        // Sync all important keys from current page data
+        ["news","fixtures","table","topScorers","topAssists","records","seasons","national","contact","teams"].forEach(key => {
+          if (window.SA[key] !== undefined) ov[key] = window.SA[key];
+        });
+        // Fix any news items missing IDs
+        if (ov.news && Array.isArray(ov.news)) {
+          ov.news.forEach((n, i) => { if (!n.id) n.id = "n" + Date.now() + i; });
+        }
+        localStorage.setItem("sa_data_overlay", JSON.stringify(ov));
+        fetch(window.SA_FIREBASE_URL + '/overlay.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ov)
+        }).then(r => {
+          if (r.ok) {
+            syncMsg.innerHTML = '<span style="color:#1a8917">✅ هاوکاتکرا! هەموو ئامێرەکان گۆڕانکاریەکان دەبینن.</span>';
+          } else {
+            syncMsg.innerHTML = '<span style="color:#c0392b">❌ هەڵە: ' + r.status + '</span>';
+          }
+        }).catch(e => {
+          syncMsg.innerHTML = '<span style="color:#c0392b">❌ هەڵە: ' + e.message + '</span>';
+        });
+      });
       $("#reset-ov").addEventListener("click", () => {
         if (confirm("هەموو گۆڕانکاریەکانت لاببرێن؟")) {
           localStorage.removeItem("sa_data_overlay");
