@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ckb" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>سێریا ئەی — ڕێکۆردەکانی مێژوو</title>
+  <link rel="icon" href="assets/img/seriaa.jpeg">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1>ڕێکۆردەکانی سەرتاسەری مێژوو</h1>
+      <p>هەموو ڕێکۆرد و سەرکەوتنە تایبەتەکانی سێریا ئەی لە ساڵی 1929ەوە</p>
+    </section>
+
+    <div class="section-title">
+      <h2>ڕێکۆردە سەرەکییەکان</h2>
+    </div>
+    <div class="grid cols-3" id="alltime"></div>
+
+    <div class="section-title" style="margin-top:40px">
+      <h2>ڕێکۆردە تایبەتەکان</h2>
+    </div>
+    <div class="grid cols-3" id="unique"></div>
+  </main>
+  <script src="assets/firebase-config.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/script.js"></script>
+  <script src="assets/admin.js"></script>
+  <script>
+    SAApp.init("history").then(() => {
+    const admin = window.SA_isAdmin;
+    const rec = window.SA.records;
+    document.getElementById("alltime").innerHTML = rec.allTime.map((r, i) => `
+  <div class="record">
+    <div class="label">${r.label}</div>
+    <div class="value">${r.value}</div>
+    <div class="name">${r.name}</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:4px">${r.years || ""}</div>
+    ${admin ? `<div style="margin-top:10px">${SAAdmin.itemButtons("alltimeRecord", { index: i })}</div>` : ""}
+  </div>`).join("");
+    document.getElementById("unique").innerHTML = rec.unique.map((r, i) => `
+  <div class="record">
+    <div class="label">${r.label}</div>
+    <div class="value">${r.value}</div>
+    <div class="name">${r.name}</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:4px">${r.year || ""}</div>
+    ${admin ? `<div style="margin-top:10px">${SAAdmin.itemButtons("uniqueRecord", { index: i })}</div>` : ""}
+  </div>`).join("");
+    if (admin) {
+      document.querySelectorAll(".section-title").forEach((el, i) => {
+        const key = i === 0 ? "alltimeRecord" : "uniqueRecord";
+        el.insertAdjacentHTML("beforeend", SAAdmin.addButton(key));
+      });
+    }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ckb" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>سێریا ئەی — یارییەکان</title>
+  <link rel="icon" href="assets/img/seriaa.jpeg">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1>یارییەکانی سێریا ئەی</h1>
+      <p>یارییەکانی هەر هەفتەیەک، بە کلیک لەسەر یارییەک زانیاری تەواو و ڕیزبەندییەکە دەبینیت</p>
+    </section>
+    <div id="weeks"></div>
+  </main>
+  <script src="assets/firebase-config.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/script.js"></script>
+  <script src="assets/admin.js"></script>
+  <script>
+    SAApp.init("fixtures").then(() => {
+    const root = document.getElementById("weeks");
+    const admin = window.SA_isAdmin;
+    root.innerHTML = (window.SA.fixtures || []).map(w => `
+  <div class="week">
+    <div class="week-header" style="flex-wrap:wrap;gap:8px">
+      <span>هەفتەی ${w.week}</span>
+      <span style="font-weight:500;opacity:.9">${w.dateRange || ""}</span>
+      <span style="display:inline-flex;gap:6px;align-items:center">
+        ${admin ? SAAdmin.itemButtons("fixtureWeek", { week: w.week }) : ""}
+        ${admin ? SAAdmin.addButton("fixtureMatch", { week: w.week }) : ""}
+      </span>
+    </div>
+    <div class="week-body">
+      ${w.matches.map(SAApp.fixtureCard).join("")}
+    </div>
+  </div>
+`).join("") + (admin ? `<div style="margin-top:14px">${SAAdmin.addButton("fixtureWeek")}</div>` : "");
+    SAApp.wireFixtures();
+    });
+  </script>
+</body>
+
+</html>

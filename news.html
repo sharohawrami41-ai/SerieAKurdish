@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ckb" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>سێریا ئەی — هەواڵ</title>
+  <link rel="icon" href="assets/img/seriaa.jpeg">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1>هەواڵەکان</h1>
+      <p>دوایین هەواڵ و ڕووداوەکانی سێریا ئەی ئیتاڵی</p>
+    </section>
+    <div class="grid cols-3" id="news-grid"></div>
+  </main>
+  <script src="assets/firebase-config.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/script.js"></script>
+  <script src="assets/admin.js"></script>
+  <script>
+    SAApp.init("news").then(() => {
+    // Admin Add button
+    if (window.SA_isAdmin) {
+      document.querySelector(".section-title, .hero").insertAdjacentHTML("afterend",
+        `<div style="margin:14px 0">${SAAdmin.addButton("news")}</div>`);
+    }
+    document.getElementById("news-grid").innerHTML = (window.SA.news || []).map(n => SAApp.newsCard(n)).join("");
+    SAApp.wireNews();
+    });
+  </script>
+</body>
+
+</html>

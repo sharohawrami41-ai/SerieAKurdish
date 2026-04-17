@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ckb" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>سێریا ئەی — ماڵەوە</title>
+  <link rel="icon" href="assets/img/seriaa.jpeg">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1>بەخێربێیت بۆ سێریا ئەی کوردی</h1>
+      <p>هەموو شت دەربارەی سێریا ئەی ئیتاڵی بە زمانی کوردی — یارییەکان، هەواڵ، ڕێکۆرد و ڕیزبەندی</p>
+    </section>
+
+    <!-- Latest news -->
+    <div class="section-title">
+      <h2>دوایین هەواڵ</h2>
+      <a class="btn ghost" href="news.html">هەموو هەواڵەکان</a>
+    </div>
+    <div class="grid cols-2" id="home-news"></div>
+
+    <!-- Fixtures of the week -->
+    <div class="section-title">
+      <h2>یارییەکانی ئەم هەفتەیە</h2>
+      <a class="btn ghost" href="fixtures.html">هەموو یارییەکان</a>
+    </div>
+    <div id="home-fixtures" style="display:grid;gap:10px"></div>
+
+    <!-- Table + top scorers -->
+    <div class="grid cols-2" style="margin-top:28px">
+      <div>
+        <div class="section-title">
+          <h2>ڕیزبەندی</h2>
+        </div>
+        <div id="home-table"></div>
+      </div>
+      <div>
+        <div class="section-title">
+          <h2>ڕیزبەندی گۆڵکاران</h2>
+        </div>
+        <div id="home-scorers"></div>
+        <a class="btn" href="season.html#top-scorers" style="margin-top:10px">بینینی هەمووی</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="assets/firebase-config.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/script.js"></script>
+  <script src="assets/admin.js"></script>
+  <script>
+    SAApp.init("home").then(() => {
+    // Latest 2 news
+    const news = (window.SA.news || []).slice(0, 2);
+    document.getElementById("home-news").innerHTML = news.map(SAApp.newsCard).join("");
+    SAApp.wireNews();
+
+    // Next upcoming or latest week (first week that has any upcoming, else last week)
+    const weeks = window.SA.fixtures || [];
+    const thisWeek = weeks.find(w => w.matches.some(m => m.status === "upcoming")) || weeks[weeks.length - 1];
+    document.getElementById("home-fixtures").innerHTML = thisWeek
+      ? `<div class="week-header" style="flex-wrap:wrap;gap:8px">
+       <span>هەفتەی ${thisWeek.week} — ${thisWeek.dateRange || ""}</span>
+       <span style="display:inline-flex;gap:6px;align-items:center">
+         ${window.SA_isAdmin ? SAAdmin.itemButtons("fixtureWeek", { week: thisWeek.week }) : ""}
+         ${window.SA_isAdmin ? SAAdmin.addButton("fixtureMatch", { week: thisWeek.week }) : ""}
+       </span>
+     </div>
+     <div class="week-body">${thisWeek.matches.map(SAApp.fixtureCard).join("")}</div>` : "";
+    SAApp.wireFixtures();
+
+    // Mini table (top 10)
+    const fullTable = SAApp.tableHTML();
+    document.getElementById("home-table").innerHTML = fullTable;
+
+    // Top 3 scorers
+    const top3 = (window.SA.topScorers || []).slice(0, 3);
+    document.getElementById("home-scorers").innerHTML = top3.map((s, i) => `
+  <div class="scorer">
+    <div class="rank ${['one', 'two', 'three'][i]}">${i + 1}</div>
+    <div class="info">
+      <div style="font-weight:800">${s.name}</div>
+      <div style="color:var(--muted);font-size:13px">${SAApp.teamName(s.team)}</div>
+    </div>
+    <div class="goals">${s.goals} ⚽</div>
+  </div>`).join("");
+    });
+  </script>
+</body>
+
+</html>

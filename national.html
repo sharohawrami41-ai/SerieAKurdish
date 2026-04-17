@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ckb" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>هەڵبژاردەی ئیتاڵیا — ئازووری</title>
+  <link rel="icon" href="assets/img/seriaa.jpeg">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+
+<body>
+  <main class="container">
+    <section class="hero" id="home">
+      <h1 id="nt-name"></h1>
+      <p id="nt-tag"></p>
+    </section>
+
+    <div class="section-title">
+      <h2>زانیاری گشتی</h2>
+    </div>
+    <div class="grid cols-3" id="nt-info"></div>
+
+    <div class="section-title" id="fixtures" style="margin-top:40px">
+      <h2>یارییەکان</h2>
+    </div>
+    <div id="nt-fixtures" style="display:grid;gap:10px"></div>
+
+    <div class="section-title" id="news" style="margin-top:40px">
+      <h2>هەواڵ</h2>
+    </div>
+    <div class="grid cols-2" id="nt-news"></div>
+
+    <div class="section-title" id="squad" style="margin-top:40px">
+      <h2>یاریزانان</h2>
+    </div>
+    <div id="nt-squad"></div>
+
+    <div class="section-title" id="records" style="margin-top:40px">
+      <h2>ڕێکۆردەکان و نازناوەکان</h2>
+    </div>
+    <div class="grid cols-2" id="nt-trophies" style="margin-bottom:16px"></div>
+    <div class="grid cols-3" id="nt-records"></div>
+  </main>
+
+  <script src="assets/firebase-config.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/script.js"></script>
+  <script src="assets/admin.js"></script>
+  <script>
+    localStorage.setItem("sa_mode", "national");
+    SAApp.init("home").then(() => {
+    const admin = window.SA_isAdmin;
+    const N = window.SA.national;
+    document.getElementById("nt-name").textContent = N.name + " — " + N.nickname;
+    document.getElementById("nt-tag").textContent = `ڕاهێنەر: ${N.coach} • دامەزراو: ${N.founded}`;
+
+    document.getElementById("nt-info").innerHTML = `
+  <div class="record"><div class="label">ڕاهێنەر</div><div class="value" style="font-size:24px">${N.coach}</div></div>
+  <div class="record"><div class="label">ساڵی دامەزراندن</div><div class="value" style="font-size:28px">${N.founded}</div></div>
+  <div class="record"><div class="label">نازناوە گەورەکان</div><div class="value" style="font-size:28px">${N.championships.length}</div></div>
+`;
+
+    document.getElementById("nt-fixtures").innerHTML = N.fixtures.map(m => {
+      const hasScore = m.score && m.status === "finished";
+      return `<div class="fixture" data-mid="${m.id}">
+    <div class="team home"><span>${m.home}</span><span class="crest">${m.homeCode || (m.home || '').slice(0, 3)}</span></div>
+    <div class="score ${hasScore ? '' : 'upcoming'}">${hasScore ? `${m.score[0]} - ${m.score[1]}` : `${m.time}<br><small>${m.date}</small>`}</div>
+    <div class="team away"><span class="crest">${m.awayCode || (m.away || '').slice(0, 3)}</span><span>${m.away}</span></div>
+    ${admin ? SAAdmin.itemButtons("ntFixture", { id: m.id }) : ""}
+  </div>`;
+    }).join("") + (admin ? `<div>${SAAdmin.addButton("ntFixture")}</div>` : "");
+    // Wire national fixtures to modal
+    document.querySelectorAll("#nt-fixtures .fixture").forEach(el => {
+      el.addEventListener("click", () => {
+        const m = N.fixtures.find(x => x.id === el.dataset.mid);
+        if (m) SAApp.openFixtureModal({ ...m, home: m.home, away: m.away, comp: m.comp });
+      });
+    });
+
+    document.getElementById("nt-news").innerHTML = N.news.map(n => SAApp.newsCard(n, { national: true })).join("")
+      + (admin ? `<div style="margin-top:10px">${SAAdmin.addButton("ntNews")}</div>` : "");
+    SAApp.wireNews();
+
+    document.getElementById("nt-squad").innerHTML = `
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>#</th><th>ناو</th><th>پۆست</th><th>یانە</th>${admin ? "<th></th>" : ""}</tr></thead>
+    <tbody>${N.squad.map((p, i) => `<tr><td class="pos">${p.no}</td><td class="team-cell">${p.name}</td><td>${p.pos}</td><td>${p.club}</td>${admin ? `<td>${SAAdmin.itemButtons("ntSquad", { index: i })}</td>` : ""}</tr>`).join("")}</tbody>
+  </table></div>${admin ? `<div style="margin-top:10px">${SAAdmin.addButton("ntSquad")}</div>` : ""}`;
+
+    document.getElementById("nt-trophies").innerHTML = N.championships.map((t, i) => `
+  <div class="record" style="background:linear-gradient(135deg,#fff,#e8f5e9)">
+    <div class="label">${t.title}</div><div class="value">${t.year}</div>
+    ${admin ? `<div style="margin-top:8px">${SAAdmin.itemButtons("ntTrophy", { index: i })}</div>` : ""}
+  </div>`).join("")
+      + (admin ? `<div class="record" style="display:grid;place-items:center">${SAAdmin.addButton("ntTrophy")}</div>` : "");
+
+    document.getElementById("nt-records").innerHTML = N.records.map((r, i) => `
+  <div class="record"><div class="label">${r.label}</div><div class="value">${r.value}</div><div class="name">${r.name}</div>
+  ${admin ? `<div style="margin-top:10px">${SAAdmin.itemButtons("ntRecord", { index: i })}</div>` : ""}</div>`).join("")
+      + (admin ? `<div class="record" style="display:grid;place-items:center">${SAAdmin.addButton("ntRecord")}</div>` : "");
+    });
+  </script>
+</body>
+
+</html>

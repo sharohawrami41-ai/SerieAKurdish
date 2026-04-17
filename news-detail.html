@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ckb" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>سێریا ئەی — هەواڵ</title>
+  <link rel="icon" href="assets/img/seriaa.jpeg">
+  <link rel="stylesheet" href="assets/style.css">
+  <meta id="og-title" property="og:title" content="سێریا ئەی">
+  <meta id="og-desc" property="og:description" content="">
+  <meta id="og-image" property="og:image" content="">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body>
+  <main class="container">
+    <article id="news-article" class="card" style="padding:0;overflow:hidden">
+      <div id="n-img" style="height:360px;background-size:cover;background-position:center;background:#e8eaf6"></div>
+      <div style="padding:24px 28px">
+        <div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin-bottom:8px">
+          <span id="n-date"></span>
+          <span id="n-cat" class="chip" style="display:none"></span>
+        </div>
+        <h1 id="n-title" style="margin:0 0 14px;color:var(--ink)"></h1>
+        <p id="n-excerpt" style="color:var(--muted);font-size:17px;margin:0 0 18px"></p>
+        <div id="n-body" style="font-size:16px;line-height:1.9"></div>
+        <div
+          style="margin-top:26px;padding-top:18px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap">
+          <button id="share-fb" class="btn btn-primary">هاوبەشی لەگەڵ فەیسبوک</button>
+          <button id="copy-link" class="btn">کۆپی کردنی بەستەر</button>
+          <a href="news.html" class="btn" style="margin-inline-start:auto">← گەڕانەوە بۆ هەواڵەکان</a>
+        </div>
+      </div>
+    </article>
+    <div id="not-found" style="display:none;text-align:center;padding:60px 20px">
+      <h2>هەواڵ نەدۆزرایەوە</h2>
+      <p><a href="news.html" class="btn">گەڕانەوە بۆ هەواڵەکان</a></p>
+    </div>
+  </main>
+  <script src="assets/firebase-config.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/script.js"></script>
+  <script src="assets/admin.js"></script>
+  <script>
+    SAApp.init("news").then(() => {
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+    const type = params.get("type") || "club";
+    const pool = type === "national" ? (window.SA.national?.news || []) : (window.SA.news || []);
+    const n = pool.find(x => x.id === id);
+
+    if (!n) {
+      document.getElementById("news-article").style.display = "none";
+      document.getElementById("not-found").style.display = "block";
+    } else {
+      document.title = n.title + " — سێریا ئەی";
+      document.getElementById("n-img").style.backgroundImage = `url('${n.image}')`;
+      document.getElementById("n-date").textContent = n.date || "";
+      if (n.category) {
+        const c = document.getElementById("n-cat");
+        c.style.display = "inline-block";
+        c.textContent = n.category;
+      }
+      document.getElementById("n-title").textContent = n.title;
+      document.getElementById("n-excerpt").textContent = n.excerpt || "";
+      document.getElementById("n-body").textContent = n.body || "";
+      document.getElementById("og-title").setAttribute("content", n.title);
+      document.getElementById("og-desc").setAttribute("content", n.excerpt || "");
+      if (n.image) document.getElementById("og-image").setAttribute("content", new URL(n.image, location.href).href);
+
+      const shareUrl = location.href;
+      document.getElementById("share-fb").addEventListener("click", () => {
+        const u = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(shareUrl);
+        window.open(u, "_blank", "width=600,height=500");
+      });
+      document.getElementById("copy-link").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          const b = document.getElementById("copy-link");
+          const old = b.textContent;
+          b.textContent = "کۆپی کرا ✓";
+          setTimeout(() => b.textContent = old, 1500);
+        } catch (e) {
+          prompt("بەستەر:", shareUrl);
+        }
+      });
+
+      if (window.SA_isAdmin) {
+        const schemaKey = type === "national" ? "ntNews" : "news";
+        document.querySelector("#news-article > div").insertAdjacentHTML("beforeend",
+          `<div style="margin-top:14px">${SAAdmin.itemButtons(schemaKey, { id: n.id })}</div>`);
+      }
+    }
+    });
+  </script>
+</body>
+
+</html>
