@@ -422,6 +422,15 @@
 
     // Generic array path
     const item = formToItem(schemaKey, fd);
+     // For new items, auto-generate an ID if the schema uses idField
+    if (opts.mode !== "edit" && s.idField && !item[s.idField]) {
+      const newDef = s.newItem();
+      item[s.idField] = newDef[s.idField] || (s.idField + Date.now());
+    }
+    // For edits, preserve the original ID
+    if (opts.mode === "edit" && s.idField && opts.item && opts.item[s.idField]) {
+      item[s.idField] = opts.item[s.idField];
+    }
     // Navigate to the array
     const path = s.path; // eg ["records","allTime"] or ["national","squad"]
     const topKey = path[0];
