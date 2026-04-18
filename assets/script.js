@@ -426,7 +426,16 @@ function wireFixtures(root = document) {
 // ---- League table renderer ----
 function tableHTML() {
   const admin = window.SAAdmin && window.SA_isAdmin;
-  const rows = window.SA.table.map((r, i) => {
+  // Auto-sort: most points first, then goal difference, then goals scored
+  const sorted = [...window.SA.table].sort((a, b) => {
+    if (b.pts !== a.pts) return b.pts - a.pts;
+    const gdA = a.gf - a.ga, gdB = b.gf - b.ga;
+    if (gdB !== gdA) return gdB - gdA;
+    return b.gf - a.gf;
+  });
+  // Update the original array so admin edit indices match
+  window.SA.table = sorted;
+  const rows = sorted.map((r, i) => {
     const btns = admin ? window.SAAdmin.itemButtons("tableRow", { index: i }) : "";
     return `<tr>
       <td class="pos">${i + 1}</td>
