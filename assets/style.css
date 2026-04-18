@@ -28,7 +28,7 @@
 }
 
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0;overflow-x:hidden}
 html{scroll-behavior:smooth}
 body{
   font-family:'IRBL','Aria','Noto Naskh Arabic','Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif;
@@ -346,9 +346,12 @@ footer small{opacity:.8}
   #admin-panel{bottom:14px;left:14px;right:14px;max-width:none}
 
   /* News detail page */
-  #news-article #n-img{height:220px !important}
+  #news-article #n-img{max-height:220px !important}
   #news-article h1{font-size:22px}
   #news-article p{font-size:15px !important}
+
+  /* Home page bottom grid: stack table and scorers */
+  #home-bottom{grid-template-columns:1fr !important}
 }
 
 /* ============ VERY SMALL PHONES ============ */
