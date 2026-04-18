@@ -352,6 +352,9 @@ footer small{opacity:.8}
 
   /* Home page bottom grid: stack table and scorers */
   #home-bottom{grid-template-columns:1fr !important}
+  /* Ensure table scrolls properly on mobile */
+  #home-table .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
+  #home-table .table{min-width:520px}
 }
 
 /* ============ VERY SMALL PHONES ============ */
